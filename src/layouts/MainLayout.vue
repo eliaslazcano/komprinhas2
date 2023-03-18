@@ -20,13 +20,17 @@
     <q-drawer
       v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label header>Ferramentas</q-item-label>
+        <q-item-label header>Menu</q-item-label>
         <EssentialLink v-for="link in essentialLinks" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <transition appear mode="out-in" enter-active-class="animated fadeIn">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </q-page-container>
   </q-layout>
 </template>
@@ -41,19 +45,25 @@ export default defineComponent({
     const essentialLinks = [
       {
         title: 'Carrinho de compras',
-        caption: '',
+        caption: 'Acompanhe o carrinho nas compras',
         icon: 'shopping_cart',
         to: '/carrinhos'
       },
       {
         title: 'Lista de compras',
-        caption: '',
-        icon: 'format_list_bulleted',
+        caption: 'Planeje o que precisa comprar',
+        icon: 'assignment',
         to: '/listas'
       },
       {
+        title: 'Mercados',
+        caption: 'Cadastro de supermercados',
+        icon: 'store',
+        to: '/mercados'
+      },
+      {
         title: 'Produtos',
-        caption: '',
+        caption: 'Cadastro de produtos conhecidos',
         icon: 'liquor',
         to: '/produtos'
       },
