@@ -19,6 +19,11 @@
           </q-input>
         </div>
       </template>
+      <template v-slot:body-cell-mercado="props">
+        <q-td :props="props">
+          <router-link :to="`/carrinho/${props.row.mercado}`">{{ props.value }}</router-link>
+        </q-td>
+      </template>
       <template v-slot:body-cell-opcoes="props">
         <q-td :props="props">
           <q-btn
@@ -67,7 +72,6 @@
               lazy-rules
               outlined
             ></q-select>
-            {{ iptMercado }}
           </q-card-section>
           <q-card-actions class="justify-center">
             <q-btn dense color="negative" label="Cancelar" v-close-popup />
@@ -187,7 +191,7 @@ export default defineComponent({
       this.iptMercado = this.mercados.find(i => i.id === mercado)
       this.dialogEditor = true
     },
-    fnFiltroMercado (val, update) {
+    fnFiltroMercado(val, update) {
       if (val === '') {
         update(() => {this.iptMercadoOptions = this.mercados.filter(i => !i.deletado_em)})
       } else {

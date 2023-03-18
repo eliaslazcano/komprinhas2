@@ -19,16 +19,24 @@ if (HttpHelper::isGet()) {
   $table = HttpHelper::validarParametro('table');
   $id    = (int)HttpHelper::obterParametro('id');
 
+  $filter = HttpHelper::obterParametro('filter');
+  $value  = HttpHelper::obterParametro('value');
+
   $tables = $db->tabelas();
   if (!in_array($table, $tables)) HttpHelper::erroJson(400, "A tabela `$table` não existe no banco");
   $colunas_info = $db->query("DESCRIBE $table");
   $colunas_numericas = array_column(array_filter($colunas_info, function ($i) {
-    return strpos($i['Type'], 'int(') !== false || strpos($i['Type'], 'decimal(') !== false;
+    return strpos($i['Type'], 'int(') !== false
+      || strpos($i['Type'], 'float') !== false
+      || strpos($i['Type'], 'decimal(') !== false;
   }), 'Field');
 
   if ($id) {
     $sql = "SELECT * FROM $table WHERE id = :id";
     $resultado = $db->queryPrimeiraLinha($sql, [':id' => $id], $colunas_numericas);
+  } elseif ($filter && $value) {
+    $sql = "SELECT * FROM $table WHERE $filter = :filter";
+    $resultado = $db->query($sql, [':filter' => $value], $colunas_numericas);
   } else {
     $sql = "SELECT * FROM $table";
     $resultado = $db->query($sql, [], $colunas_numericas);

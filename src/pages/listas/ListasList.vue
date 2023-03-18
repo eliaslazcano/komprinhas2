@@ -79,8 +79,8 @@
 
 <script>
 import {defineComponent, ref} from 'vue'
-import moment from 'src/libs/moment'
 import QPageAsync from 'components/QPageAsync.vue'
+import moment from 'src/libs/moment'
 export default defineComponent({
   components: {QPageAsync},
   setup() {
