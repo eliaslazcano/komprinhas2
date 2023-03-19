@@ -64,7 +64,11 @@
               use-input
               lazy-rules
               outlined
-            ></q-select>
+            >
+              <template v-slot:append>
+                <q-btn flat round icon="add_circle" color="positive" @click.stop="dialogCadastrarProduto = true"/>
+              </template>
+            </q-select>
             <q-input
               label="Quantidade (Un/Kg)"
               v-model="iptQuantidade"
@@ -91,6 +95,8 @@
       </q-card>
     </q-dialog>
 
+    <dialog-produto-component v-model="dialogCadastrarProduto" :after-save="afterCadastrarProduto"/>
+
     <q-page-sticky position="bottom-right" :offset="[18, 12]">
       <q-btn fab icon="add" color="green" push @click="dialogEditor = true">
         <q-tooltip anchor="center left" self="center right" :offset="[10, 10]">ADICIONAR</q-tooltip>
@@ -101,10 +107,11 @@
 
 <script>
 import {defineComponent, ref, computed} from 'vue'
-import QPageAsync from 'components/QPageAsync.vue'
 import moment from 'src/libs/moment'
+import QPageAsync from 'components/QPageAsync.vue'
+import DialogProdutoComponent from 'pages/produtos/DialogProdutoComponent.vue'
 export default defineComponent({
-  components: {QPageAsync},
+  components: {DialogProdutoComponent, QPageAsync},
   setup() {
     const produtos = ref([])
     const getProdutoNome = (id) => produtos.value.find(i => i.id === id)?.nome
@@ -138,6 +145,7 @@ export default defineComponent({
   data: () => ({
     loading: true,
     dialogEditor: false,
+    dialogCadastrarProduto: false,
 
     iptProduto: null,
     iptProdutoOptions: [],
@@ -225,6 +233,12 @@ export default defineComponent({
       this.iptProduto = null
       this.iptQuantidade = ''
       this.iptPreco = ''
+    },
+    async afterCadastrarProduto(id) {
+      const params = {table: 'produtos'}
+      const {data: produtos} = await this.$api.get('/crud', {params})
+      this.produtos = produtos
+      this.iptProduto = produtos.find(i => i.id === id)
     },
   },
   created() {

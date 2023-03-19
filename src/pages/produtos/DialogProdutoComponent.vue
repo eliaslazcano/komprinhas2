@@ -66,12 +66,13 @@ export default defineComponent({
         if (this.iptId) {
           await this.$api.put('/crud', {table: 'produtos', data: body})
           if (this.afterSave) await this.afterSave(this.iptId)
+          this.$q.notify({type: 'positive', message: 'Produto atualizado com sucesso', timeout: 2500})
         } else {
-          const {data} = await this.$api.post('/crud', {table: 'produtos', data})
+          const {data} = await this.$api.post('/crud', {table: 'produtos', data: body})
           if (this.afterSave) await this.afterSave(data.id)
+          this.$q.notify({type: 'positive', message: 'Produto cadastrado com sucesso', timeout: 2500})
         }
         this.$emit('update:modelValue', false)
-        this.$q.notify({type: 'positive', message: 'Registrado com sucesso', timeout: 2500})
       } finally {
         dialog.hide()
       }
