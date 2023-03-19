@@ -19,6 +19,11 @@
           </q-input>
         </div>
       </template>
+      <template v-slot:body-cell-id="props">
+        <q-td :props="props">
+          <q-btn :label="props.value" :to="`/lista/${props.row.id}`" flat color="primary"/>
+        </q-td>
+      </template>
       <template v-slot:body-cell-opcoes="props">
         <q-td :props="props">
           <q-btn

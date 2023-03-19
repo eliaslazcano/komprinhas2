@@ -7,11 +7,12 @@
       :filter="tableFilter"
       class="q-mb-xl"
       rows-per-page-label="Itens por página:"
-      no-data-label="Nenhum carrinho registrado"
+      no-data-label="Nenhum item registrado"
+      hide-pagination
     >
       <template v-slot:top>
         <div class="full-width">
-          <p class="text-h6 text-weight-regular q-mb-sm">Carrinhos de compras</p>
+          <p class="text-h6 text-weight-regular q-mb-sm">Lista de compras</p>
           <q-input label="Pesquisar" v-model="tableFilter" outlined dense>
             <template v-slot:prepend>
               <q-icon name="search" />
@@ -19,32 +20,17 @@
           </q-input>
         </div>
       </template>
-      <template v-slot:body-cell-id="props">
-        <q-td :props="props">
-          <q-btn :label="props.value" :to="`/carrinho/${props.row.id}`" flat color="primary"/>
-        </q-td>
-      </template>
       <template v-slot:body-cell-opcoes="props">
         <q-td :props="props">
           <q-btn
-            color="orange"
-            icon="edit"
-            @click="editarItem(props.row.id, props.row.mercado)"
-            round
-            dense
-            flat
-          >
-            <q-tooltip anchor="center left" self="center right" :offset="[10, 10]">EDITAR</q-tooltip>
-          </q-btn>
-          <q-btn
             color="negative"
             icon="remove_circle"
-            @click="removerItem(props.row.id, props.row.mercado)"
+            @click="removerItem(props.row.id)"
             round
             dense
             flat
           >
-            <q-tooltip anchor="center left" self="center right" :offset="[10, 10]">REMOVER PRODUTO</q-tooltip>
+            <q-tooltip anchor="center left" self="center right" :offset="[10, 10]">REMOVER ITEM</q-tooltip>
           </q-btn>
         </q-td>
       </template>
@@ -52,26 +38,34 @@
 
     <q-dialog v-model="dialogEditor" @hide="resetarFormulario">
       <q-card style="width: 26rem; max-width: 100%">
-        <q-form @submit.prevent="salvarItem">
+        <q-form @submit.prevent="adicionarItem">
           <q-toolbar>
-            <q-toolbar-title>{{ iptId ? 'Editar' : 'Cadastrar' }} carrinho</q-toolbar-title>
+            <q-toolbar-title>Adicionar item</q-toolbar-title>
             <q-btn flat round dense icon="close" v-close-popup />
           </q-toolbar>
           <q-card-section class="q-gutter-y-lg">
             <q-select
-              label="Mercado"
-              v-model="iptMercado"
-              :rules="iptMercadoRules"
-              :options="iptMercadoOptions"
+              label="Produto"
+              v-model="iptProduto"
+              :rules="iptProdutoRules"
+              :options="iptProdutoOptions"
               option-value="id"
               option-label="nome"
               input-debounce="250"
               behavior="dialog"
-              @filter="fnFiltroMercado"
+              @filter="fnFiltroProduto"
               use-input
               lazy-rules
               outlined
             ></q-select>
+            <q-input
+              label="Quantidade (Un/Kg)"
+              v-model="iptQuantidade"
+              :rules="iptQuantidadeRules"
+              type="tel"
+              lazy-rules
+              outlined
+            />
           </q-card-section>
           <q-card-actions class="justify-center">
             <q-btn dense color="negative" label="Cancelar" v-close-popup />
@@ -82,53 +76,59 @@
     </q-dialog>
 
     <q-page-sticky position="bottom-right" :offset="[18, 12]">
-      <q-btn fab icon="add" color="green" push @click="iptId = null; dialogEditor = true">
-        <q-tooltip anchor="center left" self="center right" :offset="[10, 10]">NOVO</q-tooltip>
+      <q-btn fab icon="add" color="green" push @click="dialogEditor = true">
+        <q-tooltip anchor="center left" self="center right" :offset="[10, 10]">ADICIONAR</q-tooltip>
       </q-btn>
     </q-page-sticky>
   </q-page-async>
 </template>
 
 <script>
-import {defineComponent, ref} from 'vue'
-import moment from 'src/libs/moment'
+import {defineComponent, ref, computed} from 'vue'
 import QPageAsync from 'components/QPageAsync.vue'
+import moment from 'src/libs/moment'
 export default defineComponent({
   components: {QPageAsync},
   setup() {
-    const mercados = ref([])
-    const getMercadoNome = (id) => mercados.value.find(i => i.id === id)?.nome
+    const produtos = ref([])
+    const getProdutoNome = (id) => produtos.value.find(i => i.id === id)?.nome
 
     const tableColumns = [
-      { field: 'id', name: 'id', label: 'ID', sortable: true, align: 'left' },
-      { field: (r) => getMercadoNome(r.mercado), name: 'mercado', label: 'Mercado', sortable: true, align: 'left' },
+      { field: (r) => getProdutoNome(r.produto), name: 'produto', label: 'Produto', sortable: true, align: 'left' },
+      { field: 'quantidade', name: 'quantidade', label: 'Qtd Un.', sortable: true, align: 'left', format: (v) => v.toFixed(2) },
       { field: 'criado_em', name: 'criado_em', label: 'Data', sortable: true, align: 'left', format: (v) => moment(v).format('DD/MM/YYYY HH:mm') },
       { field: 'opcoes', name: 'opcoes', label: 'Opções', sortable: false },
     ]
     const tableRows = ref([])
-    const tablePagination = { sortBy: 'id', rowsPerPage: 10, descending: true }
+    const tablePagination = { sortBy: 'criado_em', rowsPerPage: 0, descending: true }
     const tableFilter = ref('')
-    return {tableColumns, tableRows, tablePagination, tableFilter,mercados, getMercadoNome}
+
+    const iptProdutoRules = [v => !!v || 'Campo obrigatório']
+    const iptQuantidadeRules = [
+      v => !!v && !!v.trim() && Number(v) > 0 || 'Informe a quantidade',
+      v => !!v && !v.includes(',') || 'Use ponto ao invés de virgula'
+    ]
+    return {tableColumns, tableRows, tablePagination, tableFilter, produtos, iptProdutoRules, iptQuantidadeRules}
   },
   data: () => ({
     loading: true,
     dialogEditor: false,
-    iptId: null,
 
-    iptMercado: '',
-    iptMercadoRules: [v => !!v || 'Campo obrigatório'],
-    iptMercadoOptions: [],
+    iptProduto: null,
+    iptProdutoOptions: [],
+    iptQuantidade: '',
   }),
   methods: {
     async loadData(spinner = true) {
       try {
         this.loading = !!spinner
 
-        let params = {table: 'mercados'}
-        const {data: mercados} = await this.$api.get('/crud', {params})
-        this.mercados = mercados
+        let params = {table: 'produtos'}
+        const {data: produtos} = await this.$api.get('/crud', {params})
+        this.produtos = produtos
 
-        params = {table: 'carrinhos'}
+        const listaId = Number(this.$route.params.id)
+        params = {table: 'lista_itens', filter: 'lista', value: listaId}
         const {data} = await this.$api.get('/crud', {params})
         this.tableRows = data
 
@@ -138,9 +138,11 @@ export default defineComponent({
       }
     },
     async removerItem(id) {
+      const item = this.tableRows.find(i => i.id === id)
+      const produto = this.produtos.find(i => i.id === item.produto)
       this.$q.dialog({
-        title: 'Remover carrinho',
-        message: `O carrinho ${id} será removido.`,
+        title: 'Remover item',
+        message: `O item "${produto.nome}" será removido.`,
         html: true,
         cancel: true,
         persistent: false,
@@ -152,16 +154,16 @@ export default defineComponent({
           ok: false
         })
         try {
-          const params = {table: 'carrinhos', id}
+          const params = {table: 'lista_itens', id}
           await this.$api.delete('/crud', {params})
           await this.loadData(false)
-          this.$q.notify({type: 'positive', message: 'Carrinho removido', timeout: 2500})
+          this.$q.notify({type: 'positive', message: 'Item removido', timeout: 2500})
         } finally {
           dialog.hide()
         }
       })
     },
-    async salvarItem() {
+    async adicionarItem() {
       const dialog = this.$q.dialog({
         message: 'Registrando',
         progress: true,
@@ -170,11 +172,11 @@ export default defineComponent({
       })
       try {
         const data = {
-          'id': this.iptId,
-          'mercado': this.iptMercado.id,
+          'lista': Number(this.$route.params.id),
+          'produto': this.iptProduto.id,
+          'quantidade': Number(this.iptQuantidade),
         }
-        if (this.iptId) await this.$api.put('/crud', {table: 'carrinhos', data})
-        else await this.$api.post('/crud', {table: 'carrinhos', data})
+        await this.$api.post('/crud', {table: 'lista_itens', data})
         await this.loadData(false)
         this.dialogEditor = false
         this.$q.notify({type: 'positive', message: 'Registrado com sucesso', timeout: 2500})
@@ -182,24 +184,19 @@ export default defineComponent({
         dialog.hide()
       }
     },
-    resetarFormulario() {
-      this.iptId = null
-      this.iptMercado = null
-    },
-    editarItem(id, mercado) {
-      this.iptId = id
-      this.iptMercado = this.mercados.find(i => i.id === mercado)
-      this.dialogEditor = true
-    },
-    fnFiltroMercado(val, update) {
+    fnFiltroProduto (val, update) {
       if (val === '') {
-        update(() => {this.iptMercadoOptions = this.mercados.filter(i => !i.deletado_em)})
+        update(() => {this.iptProdutoOptions = this.produtos.filter(i => !i.deletado_em)})
       } else {
         update(() => {
           const needle = val.toLowerCase()
-          this.iptMercadoOptions = this.mercados.filter(i => !i.deletado_em && i.nome.toLowerCase().indexOf(needle) > -1)
+          this.iptProdutoOptions = this.produtos.filter(i => !i.deletado_em && i.nome.toLowerCase().indexOf(needle) > -1)
         })
       }
+    },
+    resetarFormulario() {
+      this.iptProduto = null
+      this.iptQuantidade = ''
     },
   },
   created() {
