@@ -11,6 +11,7 @@ const routes = [
       { path: 'lista/:id', component: () => import('pages/listas/ListaDeCompras.vue') },
       { path: 'carrinhos', component: () => import('pages/carrinhos/CarrinhosList.vue') },
       { path: 'carrinho/:id', component: () => import('pages/carrinhos/CarrinhoDeCompras.vue') },
+      { path: 'relatorios/gastos', component: () => import('pages/relatorios/GastosPage.vue') },
     ]
   },
 

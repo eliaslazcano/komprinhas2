@@ -10,7 +10,7 @@ use Eliaslazcano\Helpers\HttpHelper;
 class DbApp extends DatabaseController
 {
   //Configuração
-  protected $host = 'aws.eliaslazcano.dev.br';
+  protected $host = 'mariadb';
   protected $usuario = 'root';
   protected $senha = '501zinh0';
   protected $base_de_dados = 'komprinhas';

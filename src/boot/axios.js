@@ -3,7 +3,7 @@ import { Notify } from 'quasar'
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://aws.eliaslazcano.dev.br',
   timeout: 90000,
   timeoutErrorMessage: 'timeout'
 })

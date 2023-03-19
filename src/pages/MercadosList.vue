@@ -109,9 +109,10 @@ export default defineComponent({
         const params = {table: 'mercados'}
         const {data} = await this.$api.get('/crud', {params})
         this.tableRows = data
-        this.loading = false
       } catch (e) {
         this.$router.push('/')
+      } finally {
+        this.loading = false
       }
     },
     async removerItem(id, nome) {

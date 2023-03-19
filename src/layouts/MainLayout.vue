@@ -21,7 +21,9 @@
       v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
         <q-item-label header>Menu</q-item-label>
-        <EssentialLink v-for="link in essentialLinks" :key="link.title" v-bind="link" />
+        <EssentialLink v-for="link in linksEssenciais" :key="link.title" v-bind="link" />
+        <q-item-label header>Relatórios</q-item-label>
+        <EssentialLink v-for="link in linksRelatorios" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
 
@@ -42,7 +44,9 @@ export default defineComponent({
   name: 'MainLayout',
   components: { EssentialLink },
   setup () {
-    const essentialLinks = [
+    const leftDrawerOpen = ref(false)
+    const toggleLeftDrawer = () => leftDrawerOpen.value = !leftDrawerOpen.value
+    const linksEssenciais = [
       {
         title: 'Carrinho de compras',
         caption: 'Acompanhe o carrinho nas compras',
@@ -68,9 +72,15 @@ export default defineComponent({
         to: '/produtos'
       },
     ]
-    const leftDrawerOpen = ref(false)
-    const toggleLeftDrawer = () => leftDrawerOpen.value = !leftDrawerOpen.value
-    return { essentialLinks, leftDrawerOpen, toggleLeftDrawer }
+    const linksRelatorios = [
+      {
+        title: 'Gastos por período',
+        caption: 'Veja o quanto gastou',
+        icon: 'request_quote',
+        to: '/relatorios/gastos'
+      }
+    ]
+    return { leftDrawerOpen, toggleLeftDrawer, linksEssenciais, linksRelatorios }
   }
 })
 </script>
