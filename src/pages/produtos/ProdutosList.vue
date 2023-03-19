@@ -24,7 +24,7 @@
           <q-btn
             color="orange"
             icon="edit"
-            @click="editarItem(props.row.id, props.row.nome, props.row.codigo)"
+            @click="$refs['dialog-editor'].editarItem(props.row.id, props.row.nome, props.row.codigo)"
             round
             dense
             flat
@@ -45,37 +45,7 @@
       </template>
     </q-table>
 
-    <q-dialog v-model="dialogEditor" @hide="resetarFormulario">
-      <q-card style="width: 26rem; max-width: 100%">
-        <q-form @submit.prevent="salvarItem">
-          <q-toolbar>
-            <q-toolbar-title>{{ iptId ? 'Editar' : 'Cadastrar' }} produto</q-toolbar-title>
-            <q-btn flat round dense icon="close" v-close-popup />
-          </q-toolbar>
-          <q-card-section class="q-gutter-y-lg">
-            <q-input
-              label="Nome"
-              v-model="iptNome"
-              :rules="iptNomeRules"
-              lazy-rules
-              outlined
-            />
-            <q-input
-              label="Código"
-              v-model="iptCodigo"
-              type="tel"
-              clearable
-              lazy-rules
-              outlined
-            />
-          </q-card-section>
-          <q-card-actions class="justify-center">
-            <q-btn dense color="negative" label="Cancelar" v-close-popup />
-            <q-btn dense color="primary" label="Confirmar" type="submit"/>
-          </q-card-actions>
-        </q-form>
-      </q-card>
-    </q-dialog>
+    <dialog-produto-component v-model="dialogEditor" ref="dialog-editor" :after-save="() => loadData(false)" />
 
     <q-page-sticky position="bottom-right" :offset="[18, 12]">
       <q-btn fab icon="add" color="green" push @click="iptId = null; dialogEditor = true">
@@ -88,8 +58,9 @@
 <script>
 import {defineComponent, ref, computed} from 'vue'
 import QPageAsync from 'components/QPageAsync.vue'
+import DialogProdutoComponent from 'pages/produtos/DialogProdutoComponent.vue';
 export default defineComponent({
-  components: {QPageAsync},
+  components: {DialogProdutoComponent, QPageAsync},
   setup() {
     const tableColumns = [
       { field: 'id', name: 'id', label: 'ID', sortable: true, align: 'left' },
@@ -106,10 +77,6 @@ export default defineComponent({
   data: () => ({
     loading: true,
     dialogEditor: false,
-    iptId: null,
-    iptNome: '',
-    iptNomeRules: [v => !!v && !!v.length > 0 || 'Campo obrigatório'],
-    iptCodigo: '',
   }),
   methods: {
     async loadData(spinner = true) {
@@ -146,39 +113,6 @@ export default defineComponent({
           dialog.hide()
         }
       })
-    },
-    async salvarItem() {
-      const dialog = this.$q.dialog({
-        message: 'Registrando',
-        progress: true,
-        persistent: true,
-        ok: false
-      })
-      try {
-        const data = {
-          'id': this.iptId,
-          'nome': this.iptNome.trim().toUpperCase(),
-          'codigo': this.iptCodigo ? this.iptCodigo : null
-        }
-        if (this.iptId) await this.$api.put('/crud', {table: 'produtos', data})
-        else await this.$api.post('/crud', {table: 'produtos', data})
-        await this.loadData(false)
-        this.dialogEditor = false
-        this.$q.notify({type: 'positive', message: 'Registrado com sucesso', timeout: 2500})
-      } finally {
-        dialog.hide()
-      }
-    },
-    resetarFormulario() {
-      this.iptId = null
-      this.iptNome = ''
-      this.iptCodigo = ''
-    },
-    editarItem(id, nome, codigo) {
-      this.iptId = id
-      this.iptNome = nome
-      this.iptCodigo = codigo
-      this.dialogEditor = true
     },
   },
   created() {
